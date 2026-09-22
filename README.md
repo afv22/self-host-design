@@ -4,19 +4,23 @@
 
 ### Everything is declared
 
-#### The Constraint
+#### The Situation
 
-#### The Decision
+#### The Solution
 
-#### The Tradeoff
+#### The Tradeoffs
 
 ### Nothing is exposed
 
-#### The Constraints
+#### The Situation
 
-As privacy was a key motivator for self-hosting, I needed a cohesive solution for secure networking. Personal devices had to access services hosted at home and in the cloud while ensuring that those services were not exposed to the open internet. At the host level, no ports should be published without both an authorization mechanism and encryption.
+I need access to my services and data while away from my home network in a way that ensures privacy and security.
 
-#### The Decisions
+My ISP gives me a dynamic address behind CGNAT, so inbound connections to home servers aren't reliably available. I'm also the only operator, so anything that requires routine upkeep (certs pipelines, etc.) will eventually get neglected.
+
+Running everything privately on GCP instead was complex and expensive enough to be unsustainable. Commercial VPNs that support device-to-device access exist, but can have questionable data privacy practices even when they do support device-to-device access.
+
+#### The Solution
 
 All devices are connected to a single Tailnet and assigned to one of three trust tiers:
 
@@ -32,7 +36,7 @@ Tailscale is a hard dependency, though its mesh topology means authenticated dev
 
 Zero public exposure means that I can't use webhooks for real-time triggers or alerts. This has been mitigated by configuring my services to use soon-enough polling, balancing latency against request volume and power draw.
 
-Sharing a service with another person means adding them to the Tailnet or breaking this principle.
+Sharing a service with another person requires onboarding them to the Tailnet.
 
 A compromised personal device can access everything.
 
@@ -40,8 +44,8 @@ A compromised personal device can access everything.
 
 ### Assume it will fail
 
-#### The Constraint
+#### The Situation
 
-#### The Decision
+#### The Solution
 
-#### The Tradeoff
+#### The Tradeoffs
