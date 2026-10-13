@@ -1,4 +1,6 @@
-# How I Self-Host [WIP]
+# How I Self-Host
+
+I self-host a number of services for personal use, running on hardware I own. My servers are managed with Ansible and connected with Tailscale. This document details the principles behind this setup and the tradeoffs I've accepted as its only operator. The aim is to keep these services understandable, private, and available if something fails.
 
 ## Design Principles
 
@@ -111,7 +113,7 @@ A compromised personal device can access everything. As of now, this is an accep
 
 Services are now on hardware I own. Instead of relying on cloud providers' built-in replication and backups, I am now solely responsible if something fails.
 
-Especially on unreliable local storage like my Raspberry Pi's SD card, hosts and services must be administered with an assumption that they will eventually fail. Ansible handles rebuilding the host; the only open question is how much of the state to save.
+Especially on unreliable local storage like my Raspberry Pi's SD card, hosts and services must be administered with an assumption that they will eventually fail. Ansible handles rebuilding the host; the open question is then how much of the state to save.
 
 Backing up the data is only the first step. A backup is only useful if it can be restored, so data integrity must be regularly verified.
 
@@ -125,14 +127,10 @@ Each service's state data is delineated between critical and expendable dependin
 | Repositories, issues, user accounts     | Critical      | Nightly dump pushed to R2       |
 | Package builds, action run logs, caches | Expendable    | Local disk, recreated on demand |
 
-Every service agrees on two things: Ansible defines how it runs, and whatever data it needs to keep survives as a snapshot in one R2 bucket, pushed by rclone. Snapshotting logic is defined per service, so mature projects can use established backup systems while smaller ones can get by with smaller, purpose-built scripts. Snapshots are retained until three subsequent days of successful backups are saved.
-Edge proxy nodes
-Today I check backups by manually running health checks after each version bump or change to the backup script. The next step is to deploy a verification stage that creates a new instance of the service, mounts the backed up data to it, and confirms that it loads correctly.
+Every service agrees on two things: Ansible defines how it runs, and whatever data it needs to keep survives as a restic snapshot backed up to R2. State export and verification logic is defined per service, so mature projects can use established backup systems while smaller ones can get by with smaller, purpose-built scripts.
+
+Daily backups verify expected files are included and databases are not corrupted. The next step is to deploy a backup-integrity stage that restores a snapshot from R2 into an isolated instance.
 
 #### The Tradeoffs
 
-Requires trusting a third party service with my most critical data. At this stage this is accepted, but I am exploring encrypting these backups at rest.
-
-Daily full backups require a lot of expensive storage space. Limiting the number of snapshots is okay for now, but using differential or incremental backups would reduce costs.
-
-Manual checks can be unreliable and forgotten. Previously mentioned verification stage will address this.
+Requires trusting a third party service with my most critical data. Restic encrypts snapshots at rest to ensure confidentiality, but recovery is still dependant on external availability and retaining my decryption keys.
