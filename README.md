@@ -20,6 +20,8 @@ Secrets are tracked alongside the rest of the configuration to ensure that they 
 
 Being able to back up the entire configuration, secrets and all, means that I can redeploy changes from anywhere, as long as I have access to my SOPS decryption key. With service state also backed up (see [Assume it will fail](#assume-it-will-fail)), onboarding a new or rebuilt host is straightforward.
 
+Hosts deploy themselves. Each one polls the repository every few minutes and applies any new commit on `main` to itself, so merging a change is deploying it. Because the deploy runs on the host rather than in CI, it can restart Docker, the CI runner or Forgejo itself without cutting off its own process. Each host has its own SOPS key and can decrypt only the secrets of the services it runs.
+
 Every service follows a similar shape. Here is the layout for one of the simpler ones, a budgeting app:
 
 ```
@@ -73,7 +75,7 @@ State data is not included. Storage and backup strategies can be defined and dep
 
 Initial machine setup must be handled separately. Setting up the OS, creating the user, and authenticating to the Tailnet must be done manually or with an image builder (e.g. Packer).
 
-The SOPS decryption key is a single point of failure. Per-host keys would limit a leak's blast radius to a single host's secrets, but at this scale that's not a meaningful security gain over disciplined single-key hygiene.
+My personal SOPS key can still decrypt everything, so it remains a single point of failure. Host keys limit a compromised server to its own secrets, but deploying fixes to Forgejo while it's down, or bootstrapping a new host, still needs my laptop.
 
 ### Nothing is exposed
 
